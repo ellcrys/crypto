@@ -123,3 +123,40 @@ func HexDecode(hexStr string) (string, error) {
 	dst, err := hex.DecodeString(hexStr)
 	return string(dst), err
 }
+
+// generate RSA key pair
+func GenerateKeyPair() (map[string]string, error) {
+
+	kp := make(map[string]string)
+	privateKey, err := rsa.GenerateKey(rand.Reader, 1024); 
+	if err != nil {
+        return kp, err
+    }
+
+    // calculations to speed up private key operations and
+    // some basic sanity checks
+    privateKey.Precompute()
+    if err = privateKey.Validate(); err != nil {
+        return kp, err
+    }
+
+    // convert private key to pem encode
+    privBlock := &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(privateKey)}
+    privPEMData := pem.EncodeToMemory(privBlock)
+
+    // convert public key to pem encode
+    PubASN1, err := x509.MarshalPKIXPublicKey(&privateKey.PublicKey)
+    if err != nil {
+        return kp, err
+    }
+
+    pubPEMData := pem.EncodeToMemory(&pem.Block{
+        Type:  "RSA PUBLIC KEY",
+        Bytes: PubASN1,
+    })
+
+    kp["private_key"] = string(privPEMData)
+    kp["public_key"] = string(pubPEMData)
+
+    return kp, nil
+}
