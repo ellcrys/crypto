@@ -151,7 +151,7 @@ func GenerateKeyPair() (map[string]string, error) {
     }
 
     pubPEMData := pem.EncodeToMemory(&pem.Block{
-        Type:  "RSA PUBLIC KEY",
+        Type:  "PUBLIC KEY",
         Bytes: PubASN1,
     })
 
