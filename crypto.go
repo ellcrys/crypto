@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
+	jose "gopkg.in/square/go-jose.v1"
 	"fmt"
 )
 
@@ -99,6 +100,52 @@ func (r *Signer) Verify(message []byte, hexEncodedSig string) error {
 	return rsa.VerifyPKCS1v15(r.PublicKey, crypto.SHA256, d, []byte(sig))
 }
 
+// Sign a string using JWS.
+// Accepts a payload to sign
+func (r *Signer) JWS_RSA_Sign(payload string) (string, error) {
+
+	// create jose signer
+	joseSigner, err := jose.NewSigner(jose.RS256, r.PrivateKey);
+	if err != nil {
+		return "", err
+	}
+
+	// sign payload
+	object, err := joseSigner.Sign([]byte(payload))
+	if err != nil {
+		return "", err
+	}
+
+	// serialize signature to JWT style token
+	signature, err := object.CompactSerialize()
+	if err != nil {
+		return "", err
+	}
+
+	return signature, nil
+}
+
+// Verify a signature.
+// Accepts a the signature to be verified. An error is returned if 
+// signature is invalid or signature could not be verified
+func (r *Signer) JWS_RSA_Verify(signature string) (string, error) {
+	
+	// attempt to parse serialized signature
+	object, err := jose.ParseSigned(signature)
+	if err != nil {
+		return "", errors.New("invalid signature")
+	}
+
+	// verify the signature
+	output, err := object.Verify(r.PublicKey)
+	if err != nil {
+	    return "", errors.New("failed to verify signature")
+	}
+
+	return string(output), nil
+}
+
+
 // encode byte slice to base64 string
 func ToBase64(b []byte) string {
 	return base64.StdEncoding.EncodeToString(b)
@@ -160,3 +207,4 @@ func GenerateKeyPair() (map[string]string, error) {
 
     return kp, nil
 }
+

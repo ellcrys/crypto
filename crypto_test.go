@@ -89,3 +89,25 @@ func TestFromBase64(t *testing.T) {
 	assert.NotEqual(t, decStr, "")
 	assert.Equal(t, str, decStr)
 }
+
+// TestJWS_RSA_Sign tests that a string can be signed correctly using JWS
+func TestJWS_RSA_Sign(t *testing.T) {
+	key := keys[2]
+	expected := "eyJhbGciOiJSUzI1NiIsImp3ayI6eyJrdHkiOiJSU0EiLCJuIjoicTZHWW5qZ0tQYkxYSC1rZW5sbjZPZFZRcnl2SEMzVFV1ZS01dnh5QlRwaEhkUWc0djd1Mm9CczZYb1RRSVI2YS1UVlkwR2VFM3ZpakVaX1VwNlZDdG9YUEhWRk51VDBLSmJEaE1IajFVTmZJUnpTdUdOaWJ6bVAzX0NnanRvWWEwdXJyai1ubm5hWjBuYnBVdFRseDB5LW1jVUpnWGZSZDk0QzAtZ1JFUjBNIiwiZSI6IkFRQUIifX0.aGVsbG8.Y-afJCP7c3jP7Vgl78I6sGApb4S7v717VS-kB8Gx5Owg7ePnOr32icaU_y6ESh6-lB_rXyyqktu3-0lOmFN93LQoo-WQOYdxNoVugBZ4OQRXngF2iM7_2qnu_A6NAhhM-a7LQ_q_pnFCYq8RHQycjRAFJgNbqMAezrob9-1vwDE"
+	signer, err := ParsePrivateKey([]byte(key))
+	assert.Nil(t, err)
+	signature, err := signer.JWS_RSA_Sign("hello");
+	assert.Nil(t, err)
+	assert.Equal(t, signature, expected)
+}
+
+func TestJWS_RSA_Verify(t *testing.T) {
+	pubKey := keys[0]
+	signature := "eyJhbGciOiJSUzI1NiIsImp3ayI6eyJrdHkiOiJSU0EiLCJuIjoicTZHWW5qZ0tQYkxYSC1rZW5sbjZPZFZRcnl2SEMzVFV1ZS01dnh5QlRwaEhkUWc0djd1Mm9CczZYb1RRSVI2YS1UVlkwR2VFM3ZpakVaX1VwNlZDdG9YUEhWRk51VDBLSmJEaE1IajFVTmZJUnpTdUdOaWJ6bVAzX0NnanRvWWEwdXJyai1ubm5hWjBuYnBVdFRseDB5LW1jVUpnWGZSZDk0QzAtZ1JFUjBNIiwiZSI6IkFRQUIifX0.aGVsbG8.Y-afJCP7c3jP7Vgl78I6sGApb4S7v717VS-kB8Gx5Owg7ePnOr32icaU_y6ESh6-lB_rXyyqktu3-0lOmFN93LQoo-WQOYdxNoVugBZ4OQRXngF2iM7_2qnu_A6NAhhM-a7LQ_q_pnFCYq8RHQycjRAFJgNbqMAezrob9-1vwDE"
+	sigPayload := "hello"
+	signer, err := ParsePublicKey([]byte(pubKey))
+	assert.Nil(t, err)
+	payload, err := signer.JWS_RSA_Verify(signature);
+	assert.Nil(t, err)
+	assert.Equal(t, sigPayload, payload)
+}
