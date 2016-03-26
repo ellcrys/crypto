@@ -7,7 +7,7 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/base64"
+	b64 "encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
 	"errors"
@@ -148,12 +148,21 @@ func (r *Signer) JWS_RSA_Verify(signature string) (string, error) {
 
 // encode byte slice to base64 string
 func ToBase64(b []byte) string {
-	return base64.StdEncoding.EncodeToString(b)
+	return b64.RawURLEncoding.EncodeToString(b)
 }
 
 // decode a base64 string
 func FromBase64(b string) (string, error) {
-	bs, err := base64.StdEncoding.DecodeString(b)
+	bs, err := b64.StdEncoding.DecodeString(b)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s", bs), nil
+}
+
+// decode a base64 string. Ignores base64 padding.
+func FromBase64Raw(b string) (string, error) {
+	bs, err := b64.RawURLEncoding.DecodeString(b)
 	if err != nil {
 		return "", err
 	}
