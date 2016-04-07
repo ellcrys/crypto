@@ -22,7 +22,7 @@ func ParsePublicKey(pemBytes []byte) (*Signer, error) {
 	if block == nil {
 		return nil, errors.New("no key found or passed in")
 	}
-
+	
 	switch block.Type {
 	case "RSA PUBLIC KEY", "PUBLIC KEY":
 		rsa, err := x509.ParsePKIXPublicKey(block.Bytes)
@@ -146,12 +146,17 @@ func (r *Signer) JWS_RSA_Verify(signature string) (string, error) {
 }
 
 
-// encode byte slice to base64 string
+// encode byte slice to base64 url string
 func ToBase64(b []byte) string {
+	return b64.StdEncoding.EncodeToString(b)
+}
+
+// Encode to base 64 using RAWURLEncoding
+func ToBase64Raw(b []byte) string {
 	return b64.RawURLEncoding.EncodeToString(b)
 }
 
-// decode a base64 string
+// Decode a base64 string
 func FromBase64(b string) (string, error) {
 	bs, err := b64.StdEncoding.DecodeString(b)
 	if err != nil {
@@ -160,7 +165,7 @@ func FromBase64(b string) (string, error) {
 	return fmt.Sprintf("%s", bs), nil
 }
 
-// decode a base64 string. Ignores base64 padding.
+// Decode from base64 using RawURLEncoding
 func FromBase64Raw(b string) (string, error) {
 	bs, err := b64.RawURLEncoding.DecodeString(b)
 	if err != nil {
