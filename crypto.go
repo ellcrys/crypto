@@ -15,6 +15,8 @@ import (
 	"fmt"
 )
 
+const VerificationFailed = "crypto/rsa: verification error"
+
 // Parse a public
 func ParsePublicKey(pemBytes []byte) (*Signer, error) {
 
