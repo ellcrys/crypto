@@ -80,6 +80,7 @@ type Signer struct {
 }
 
 // Sign signs data with rsa-sha256
+// TODO: Deprecated
 func (r *Signer) Sign(data []byte) (string, error) {
 	h := sha256.New()
 	h.Write(data)
@@ -87,6 +88,23 @@ func (r *Signer) Sign(data []byte) (string, error) {
 	sig, err := rsa.SignPKCS1v15(rand.Reader, r.PrivateKey, crypto.SHA256, d)
 	if err == nil {
 		return ToHexString(sig), nil
+	}
+	return "", err
+}
+
+// Sign signs data with rsa-sha256
+func (r *Signer) SignByte(data []byte, outEnc string) (string, error) {
+	h := sha256.New()
+	h.Write(data)
+	d := h.Sum(nil)
+	sig, err := rsa.SignPKCS1v15(rand.Reader, r.PrivateKey, crypto.SHA256, d)
+	if err == nil {
+		switch outEnc {
+		case "hex":
+			return ToHexString(sig), nil
+		case "base64url":
+			return FromBase64Raw(sig)
+		}
 	}
 	return "", err
 }
@@ -192,7 +210,7 @@ func HexDecode(hexStr string) (string, error) {
 func GenerateKeyPair() (map[string]string, error) {
 
 	kp := make(map[string]string)
-	privateKey, err := rsa.GenerateKey(rand.Reader, 1024); 
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048); 
 	if err != nil {
         return kp, err
     }
