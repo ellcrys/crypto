@@ -103,7 +103,7 @@ func (r *Signer) SignByte(data []byte, outEnc string) (string, error) {
 		case "hex":
 			return ToHexString(sig), nil
 		case "base64url":
-			return FromBase64Raw(sig)
+			return ToBase64Raw(sig)
 		}
 	}
 	return "", err
