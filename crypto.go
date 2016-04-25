@@ -80,7 +80,7 @@ type Signer struct {
 }
 
 // Sign signs data with rsa-sha256
-// TODO: Deprecated
+// Deprecated
 func (r *Signer) Sign(data []byte) (string, error) {
 	h := sha256.New()
 	h.Write(data)
