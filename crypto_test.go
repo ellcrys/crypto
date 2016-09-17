@@ -96,7 +96,7 @@ func TestJWS_RSA_Sign(t *testing.T) {
 	expected := "eyJhbGciOiJSUzI1NiIsImp3ayI6eyJrdHkiOiJSU0EiLCJuIjoicTZHWW5qZ0tQYkxYSC1rZW5sbjZPZFZRcnl2SEMzVFV1ZS01dnh5QlRwaEhkUWc0djd1Mm9CczZYb1RRSVI2YS1UVlkwR2VFM3ZpakVaX1VwNlZDdG9YUEhWRk51VDBLSmJEaE1IajFVTmZJUnpTdUdOaWJ6bVAzX0NnanRvWWEwdXJyai1ubm5hWjBuYnBVdFRseDB5LW1jVUpnWGZSZDk0QzAtZ1JFUjBNIiwiZSI6IkFRQUIifX0.aGVsbG8.Y-afJCP7c3jP7Vgl78I6sGApb4S7v717VS-kB8Gx5Owg7ePnOr32icaU_y6ESh6-lB_rXyyqktu3-0lOmFN93LQoo-WQOYdxNoVugBZ4OQRXngF2iM7_2qnu_A6NAhhM-a7LQ_q_pnFCYq8RHQycjRAFJgNbqMAezrob9-1vwDE"
 	signer, err := ParsePrivateKey([]byte(key))
 	assert.Nil(t, err)
-	signature, err := signer.JWS_RSA_Sign("hello");
+	signature, err := signer.JWS_RSA_Sign("hello")
 	assert.Nil(t, err)
 	assert.Equal(t, signature, expected)
 }
@@ -107,7 +107,18 @@ func TestJWS_RSA_Verify(t *testing.T) {
 	sigPayload := "hello"
 	signer, err := ParsePublicKey([]byte(pubKey))
 	assert.Nil(t, err)
-	payload, err := signer.JWS_RSA_Verify(signature);
+	payload, err := signer.JWS_RSA_Verify(signature)
 	assert.Nil(t, err)
 	assert.Equal(t, sigPayload, payload)
+}
+
+func TestEncryptDecrypt(t *testing.T) {
+	key := []byte("hdg-asfr%$2vaah2s_&739X^*@&^hdsg")
+	text := []byte("hello friend")
+	encText, err := Encrypt(key, text)
+	assert.Nil(t, err)
+
+	decText, err := Decrypt(key, encText)
+	assert.Nil(t, err)
+	assert.Equal(t, text, decText)
 }
