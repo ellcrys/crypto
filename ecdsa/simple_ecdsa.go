@@ -28,6 +28,7 @@ import (
 )
 
 const (
+	// CurveP256 P256 elliptic curve
 	CurveP256 = "p256"
 )
 
@@ -52,6 +53,28 @@ func NewSimpleECDSA(curveName string) *SimpleECDSA {
 		panic(err)
 	}
 	return se
+}
+
+// LoadPrivKey a formatted private key and return a ecdsa.PrivateKey
+func LoadPrivKey(privKey, curveName string) (*goecdsa.PrivateKey, error) {
+
+	dBytes, err := hex.DecodeString(privKey)
+	if err != nil {
+		return nil, errors.New("failed to decode private key")
+	}
+
+	var curve elliptic.Curve
+	switch curveName {
+	case CurveP256:
+		curve = elliptic.P256()
+	default:
+		return nil, errors.New("unsupported elliptic curve")
+	}
+
+	return &goecdsa.PrivateKey{
+		PublicKey: goecdsa.PublicKey{Curve: curve},
+		D:         new(big.Int).SetBytes(dBytes),
+	}, nil
 }
 
 // LoadPubKey creates a public key object from compact
@@ -101,6 +124,11 @@ func (se *SimpleECDSA) GetPubKey() string {
 	return fmt.Sprintf("%x&%x", x.Bytes(), y.Bytes())
 }
 
+// GetPubKeyObj returns the public key object
+func (se *SimpleECDSA) GetPubKeyObj() *goecdsa.PublicKey {
+	return &se.privKey.PublicKey
+}
+
 // GetPrivKey returns the private key
 func (se *SimpleECDSA) GetPrivKey() string {
 	return fmt.Sprintf("%x", se.privKey.D)
@@ -116,6 +144,11 @@ func (se *SimpleECDSA) GenerateKey() error {
 
 	se.privKey = privKey
 	return nil
+}
+
+// SetPrivKey sets the private key
+func (se *SimpleECDSA) SetPrivKey(privKey *goecdsa.PrivateKey) {
+	se.privKey = privKey
 }
 
 // Sign a byte slice. Return the a signature

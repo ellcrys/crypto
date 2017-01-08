@@ -53,6 +53,20 @@ func TestSimpleECDSASpec(t *testing.T) {
 			})
 		})
 
+		Convey(".LoadPrivKey()", func() {
+			Convey("should load a formatted private key and use it to verify a signaturew", func() {
+				key := NewSimpleECDSA(CurveP256)
+				privKey := key.GetPrivKey()
+				pubKey := key.GetPubKeyObj()
+				loadedPrivKey, _ := LoadPrivKey(privKey, CurveP256)
+				key.SetPrivKey(loadedPrivKey)
+				sig, err := key.Sign(rand.Reader, []byte("hello"))
+				So(err, ShouldBeNil)
+				err = Verify(pubKey, []byte("hello"), []byte(sig))
+				So(err, ShouldBeNil)
+			})
+		})
+
 		Convey(".LoadPubKey()", func() {
 
 			Convey("should fail if public key format is invalid", func() {
