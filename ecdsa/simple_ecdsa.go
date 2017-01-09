@@ -121,7 +121,7 @@ func LoadPubKey(pubKey string, curveName string) (*goecdsa.PublicKey, error) {
 func (se *SimpleECDSA) GetPubKey() string {
 	x := se.privKey.Public().(*goecdsa.PublicKey).X
 	y := se.privKey.Public().(*goecdsa.PublicKey).Y
-	return fmt.Sprintf("%x&%x", x.Bytes(), y.Bytes())
+	return fmt.Sprintf("%s&%s", hex.EncodeToString(x.Bytes()), hex.EncodeToString(y.Bytes()))
 }
 
 // GetPubKeyObj returns the public key object
@@ -131,7 +131,7 @@ func (se *SimpleECDSA) GetPubKeyObj() *goecdsa.PublicKey {
 
 // GetPrivKey returns the private key
 func (se *SimpleECDSA) GetPrivKey() string {
-	return fmt.Sprintf("%x", se.privKey.D)
+	return fmt.Sprintf("%s", hex.EncodeToString(se.privKey.D.Bytes()))
 }
 
 // GenerateKey creates a new ECDSA private key
