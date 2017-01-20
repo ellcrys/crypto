@@ -1,11 +1,8 @@
 package ecdsa
 
 import (
-	"testing"
-
-	"strings"
-
 	"crypto/rand"
+	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -28,7 +25,7 @@ func TestSimpleECDSASpec(t *testing.T) {
 		})
 
 		Convey(".GetPubKey()", func() {
-			Convey("should successfully return an ampersand delimited public key", func() {
+			Convey("should successfully return an ASN.1/DER encoded public key", func() {
 				key := NewSimpleECDSA(CurveP256)
 				pubFormatted := key.GetPubKey()
 				So(pubFormatted, ShouldNotBeNil)
@@ -54,7 +51,7 @@ func TestSimpleECDSASpec(t *testing.T) {
 		})
 
 		Convey(".LoadPrivKey()", func() {
-			Convey("should load a formatted private key and use it to verify a signaturew", func() {
+			Convey("should load a ANS.1/DER encoded private key and use it to verify a signaturew", func() {
 				key := NewSimpleECDSA(CurveP256)
 				privKey := key.GetPrivKey()
 				pubKey := key.GetPubKeyObj()
@@ -73,24 +70,7 @@ func TestSimpleECDSASpec(t *testing.T) {
 				pk, err := LoadPubKey("wrong", CurveP256)
 				So(pk, ShouldBeNil)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "invalid public key. public key must have x and y coordinates")
-			})
-
-			Convey("should fail if public key x cordinate is invalid", func() {
-				pk, err := LoadPubKey("wrong_x&some_y", CurveP256)
-				So(pk, ShouldBeNil)
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "failed to decode x coordinate")
-			})
-
-			Convey("should fail if public key y cordinate is invalid", func() {
-				key := NewSimpleECDSA(CurveP256)
-				pubFormatted := key.GetPubKey()
-				pubKeyParts := strings.Split(pubFormatted, "&")
-				pk, err := LoadPubKey(pubKeyParts[0]+"&some_y", CurveP256)
-				So(pk, ShouldBeNil)
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "failed to decode y coordinate")
+				So(err.Error(), ShouldEqual, "failed to hex decode public key")
 			})
 
 			Convey("should fail if elliptic curve is unsupported", func() {
@@ -102,7 +82,7 @@ func TestSimpleECDSASpec(t *testing.T) {
 				So(err.Error(), ShouldEqual, "unsupported elliptic curve")
 			})
 
-			Convey("should successfully load an ampersand formatted public key", func() {
+			Convey("should successfully load an ASN.1/DER encoded public key", func() {
 				key := NewSimpleECDSA(CurveP256)
 				pubFormatted := key.GetPubKey()
 				pk, err := LoadPubKey(pubFormatted, CurveP256)
@@ -117,13 +97,13 @@ func TestSimpleECDSASpec(t *testing.T) {
 				valid, err := IsValidCompactPubKey("wrong")
 				So(valid, ShouldEqual, false)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "invalid public key. public key must have x and y coordinates")
+				So(err.Error(), ShouldEqual, "failed to hex decode public key")
 			})
 
-			Convey("should return success if public key format is valid", func() {
+			Convey("should return success if public key if valid", func() {
 				key := NewSimpleECDSA(CurveP256)
-				pubFormatted := key.GetPubKey()
-				valid, err := IsValidCompactPubKey(pubFormatted)
+				validPubKey := key.GetPubKey()
+				valid, err := IsValidCompactPubKey(validPubKey)
 				So(valid, ShouldEqual, true)
 				So(err, ShouldBeNil)
 			})
@@ -145,29 +125,12 @@ func TestSimpleECDSASpec(t *testing.T) {
 			s, err := key.Sign(rand.Reader, []byte("hello"))
 			So(err, ShouldBeNil)
 
-			Convey("should fail if signed hash is invalid", func() {
+			Convey("should fail if signed hash is invalid hex value", func() {
 				key := NewSimpleECDSA(CurveP256)
 				pubKey := key.privKey.PublicKey
 				err := Verify(&pubKey, []byte("wrong"), []byte("wrong"))
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "invalid signed hash. expects r and s coordinates joined by an ampersand")
-			})
-
-			Convey("should fail if r cordinate could not be decoded", func() {
-				key := NewSimpleECDSA(CurveP256)
-				pubKey := key.privKey.PublicKey
-				err := Verify(&pubKey, []byte("wrong"), []byte("wrong_r&wrong_s"))
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "failed to hex decode on r value")
-			})
-
-			Convey("should fail if s cordinate could not be decoded", func() {
-				key := NewSimpleECDSA(CurveP256)
-				pubKey := key.privKey.PublicKey
-				sigParts := strings.Split(s, "&")
-				err := Verify(&pubKey, []byte("wrong"), []byte(sigParts[0]+"&wrong_s"))
-				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "failed to hex decode on s value")
+				So(err.Error(), ShouldEqual, "failed to hex decode signature")
 			})
 
 			Convey("should fail if signature could not be verified", func() {
