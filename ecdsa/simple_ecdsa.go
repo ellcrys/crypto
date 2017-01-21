@@ -32,19 +32,19 @@ const (
 
 // ASN1PubKey defines a public key structure for ANS.1/DER encoding
 type ASN1PubKey struct {
-	X []byte
-	Y []byte
+	X string `asn1:"utf8"`
+	Y string `asn1:"utf8"`
 }
 
 // ASN1PrivKey defines a private key structure for ANS.1/DER encoding
 type ASN1PrivKey struct {
-	D []byte
+	D string `asn1:"utf8"`
 }
 
 // ASN1Sig defines an elliptic signature for ANS.1/DER encoding
 type ASN1Sig struct {
-	R []byte
-	S []byte
+	R string `asn1:"utf8"`
+	S string `asn1:"utf8"`
 }
 
 // SimpleECDSA defines code for creating ECDSA keys,
@@ -92,9 +92,14 @@ func LoadPrivKey(privKey, curveName string) (*goecdsa.PrivateKey, error) {
 		return nil, errors.New("unsupported elliptic curve")
 	}
 
+	D, err := hex.DecodeString(asn1PrivKey.D)
+	if err != nil {
+		return nil, errors.New("failed to decode private key")
+	}
+
 	return &goecdsa.PrivateKey{
 		PublicKey: goecdsa.PublicKey{Curve: curve},
-		D:         new(big.Int).SetBytes(asn1PrivKey.D),
+		D:         new(big.Int).SetBytes(D),
 	}, nil
 }
 
@@ -121,10 +126,19 @@ func LoadPubKey(pubKey string, curveName string) (*goecdsa.PublicKey, error) {
 		return nil, errors.New("unsupported elliptic curve")
 	}
 
+	x, err := hex.DecodeString(asn1Pub.X)
+	if err != nil {
+		return nil, errors.New("failed to decode public key")
+	}
+	y, err := hex.DecodeString(asn1Pub.Y)
+	if err != nil {
+		return nil, errors.New("failed to decode private key")
+	}
+
 	return &goecdsa.PublicKey{
 		Curve: curve,
-		X:     new(big.Int).SetBytes(asn1Pub.X),
-		Y:     new(big.Int).SetBytes(asn1Pub.Y),
+		X:     new(big.Int).SetBytes(x),
+		Y:     new(big.Int).SetBytes(y),
 	}, nil
 }
 
@@ -132,8 +146,8 @@ func LoadPubKey(pubKey string, curveName string) (*goecdsa.PublicKey, error) {
 // returns the hex encoded value.
 func (se *SimpleECDSA) GetPubKey() string {
 	asn1PubKey := ASN1PubKey{
-		X: se.privKey.Public().(*goecdsa.PublicKey).X.Bytes(),
-		Y: se.privKey.Public().(*goecdsa.PublicKey).Y.Bytes(),
+		X: hex.EncodeToString(se.privKey.Public().(*goecdsa.PublicKey).X.Bytes()),
+		Y: hex.EncodeToString(se.privKey.Public().(*goecdsa.PublicKey).Y.Bytes()),
 	}
 	bs, err := asn1.Marshal(asn1PubKey)
 	if err != nil {
@@ -150,7 +164,7 @@ func (se *SimpleECDSA) GetPubKeyObj() *goecdsa.PublicKey {
 // GetPrivKey returns an ASN.1/DER encoded private key
 func (se *SimpleECDSA) GetPrivKey() string {
 	var asn1PrivKey = ASN1PrivKey{
-		D: se.privKey.D.Bytes(),
+		D: hex.EncodeToString(se.privKey.D.Bytes()),
 	}
 	bs, err := asn1.Marshal(asn1PrivKey)
 	if err != nil {
@@ -184,8 +198,8 @@ func (se *SimpleECDSA) Sign(rand io.Reader, hashed []byte) (string, error) {
 	}
 
 	var asn1Sig = ASN1Sig{
-		R: r.Bytes(),
-		S: s.Bytes(),
+		R: hex.EncodeToString(r.Bytes()),
+		S: hex.EncodeToString(s.Bytes()),
 	}
 
 	bs, _ := asn1.Marshal(asn1Sig)
@@ -193,9 +207,9 @@ func (se *SimpleECDSA) Sign(rand io.Reader, hashed []byte) (string, error) {
 	return fmt.Sprintf("%s", hex.EncodeToString(bs)), nil
 }
 
-// IsValidCompactPubKey checks whether the public key
+// IsValidPubKey checks whether the public key
 // pass hex and ASN.1/DER decoding operations.
-func IsValidCompactPubKey(pubKey string) (bool, error) {
+func IsValidPubKey(pubKey string) (bool, error) {
 
 	pubBS, err := hex.DecodeString(pubKey)
 	if err != nil {
@@ -225,11 +239,14 @@ func Verify(pubKey *goecdsa.PublicKey, hash []byte, sig []byte) error {
 		return errors.New("failed to unmarshal ASN.1/DER signature")
 	}
 
+	r, _ := hex.DecodeString(asn1Sig.R)
+	s, _ := hex.DecodeString(asn1Sig.S)
+
 	// verify signature
 	if goecdsa.Verify(
 		pubKey, hash,
-		new(big.Int).SetBytes(asn1Sig.R),
-		new(big.Int).SetBytes(asn1Sig.S)) {
+		new(big.Int).SetBytes(r),
+		new(big.Int).SetBytes(s)) {
 		return nil
 	}
 	return errors.New("verification failed")

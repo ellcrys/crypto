@@ -55,7 +55,8 @@ func TestSimpleECDSASpec(t *testing.T) {
 				key := NewSimpleECDSA(CurveP256)
 				privKey := key.GetPrivKey()
 				pubKey := key.GetPubKeyObj()
-				loadedPrivKey, _ := LoadPrivKey(privKey, CurveP256)
+				loadedPrivKey, err := LoadPrivKey(privKey, CurveP256)
+				So(err, ShouldBeNil)
 				key.SetPrivKey(loadedPrivKey)
 				sig, err := key.Sign(rand.Reader, []byte("hello"))
 				So(err, ShouldBeNil)
@@ -91,10 +92,10 @@ func TestSimpleECDSASpec(t *testing.T) {
 			})
 		})
 
-		Convey(".IsValidCompactPubKey", func() {
+		Convey(".IsValidPubKey", func() {
 
 			Convey("should fail if public key is not a valid compact/formatted key", func() {
-				valid, err := IsValidCompactPubKey("wrong")
+				valid, err := IsValidPubKey("wrong")
 				So(valid, ShouldEqual, false)
 				So(err, ShouldNotBeNil)
 				So(err.Error(), ShouldEqual, "failed to hex decode public key")
@@ -103,7 +104,7 @@ func TestSimpleECDSASpec(t *testing.T) {
 			Convey("should return success if public key if valid", func() {
 				key := NewSimpleECDSA(CurveP256)
 				validPubKey := key.GetPubKey()
-				valid, err := IsValidCompactPubKey(validPubKey)
+				valid, err := IsValidPubKey(validPubKey)
 				So(valid, ShouldEqual, true)
 				So(err, ShouldBeNil)
 			})
