@@ -213,7 +213,7 @@ func (se *SimpleECDSA) Sign(rand io.Reader, hashed []byte) (string, error) {
 func IsValidPubKey(pubKey string) (bool, error) {
 	_, err := LoadPubKey(pubKey, CurveP256)
 	if err != nil {
-		return false, fmt.Errorf("failed to hex decode public key. %s", err)
+		return false, err
 	}
 	return true, nil
 }
