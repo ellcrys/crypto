@@ -71,7 +71,7 @@ func TestSimpleECDSASpec(t *testing.T) {
 				pk, err := LoadPubKey("wrong", CurveP256)
 				So(pk, ShouldBeNil)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "failed to hex decode public key")
+				So(err.Error(), ShouldEqual, "failed to hex decode public key. encoding/hex: odd length hex string")
 			})
 
 			Convey("should fail if elliptic curve is unsupported", func() {
@@ -98,7 +98,7 @@ func TestSimpleECDSASpec(t *testing.T) {
 				valid, err := IsValidPubKey("wrong")
 				So(valid, ShouldEqual, false)
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "failed to hex decode public key")
+				So(err.Error(), ShouldEqual, "failed to hex decode public key. encoding/hex: odd length hex string")
 			})
 
 			Convey("should return success if public key if valid", func() {
@@ -131,7 +131,7 @@ func TestSimpleECDSASpec(t *testing.T) {
 				pubKey := key.privKey.PublicKey
 				err := Verify(&pubKey, []byte("wrong"), []byte("wrong"))
 				So(err, ShouldNotBeNil)
-				So(err.Error(), ShouldEqual, "failed to hex decode signature")
+				So(err.Error(), ShouldEqual, "failed to hex decode signature. encoding/hex: odd length hex string")
 			})
 
 			Convey("should fail if signature could not be verified", func() {

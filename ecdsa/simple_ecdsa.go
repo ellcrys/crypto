@@ -75,7 +75,7 @@ func LoadPrivKey(privKey, curveName string) (*goecdsa.PrivateKey, error) {
 
 	dBytes, err := hex.DecodeString(privKey)
 	if err != nil {
-		return nil, errors.New("failed to decode private key")
+		return nil, fmt.Errorf("failed to hex decode private key. %s", err)
 	}
 
 	var asn1PrivKey ASN1PrivKey
@@ -94,7 +94,7 @@ func LoadPrivKey(privKey, curveName string) (*goecdsa.PrivateKey, error) {
 
 	D, err := hex.DecodeString(asn1PrivKey.D)
 	if err != nil {
-		return nil, errors.New("failed to decode private key")
+		return nil, fmt.Errorf("failed to hex decode private key. %s", err)
 	}
 
 	return &goecdsa.PrivateKey{
@@ -109,7 +109,7 @@ func LoadPubKey(pubKey string, curveName string) (*goecdsa.PublicKey, error) {
 
 	pubBS, err := hex.DecodeString(pubKey)
 	if err != nil {
-		return nil, errors.New("failed to hex decode public key")
+		return nil, fmt.Errorf("failed to hex decode public key. %s", err)
 	}
 
 	var asn1Pub ASN1PubKey
@@ -128,11 +128,12 @@ func LoadPubKey(pubKey string, curveName string) (*goecdsa.PublicKey, error) {
 
 	x, err := hex.DecodeString(asn1Pub.X)
 	if err != nil {
-		return nil, errors.New("failed to decode public key")
+		return nil, fmt.Errorf("failed to hex decode public key. %s", err)
 	}
+
 	y, err := hex.DecodeString(asn1Pub.Y)
 	if err != nil {
-		return nil, errors.New("failed to decode private key")
+		return nil, fmt.Errorf("failed to hex decode public key. %s", err)
 	}
 
 	return &goecdsa.PublicKey{
@@ -210,18 +211,10 @@ func (se *SimpleECDSA) Sign(rand io.Reader, hashed []byte) (string, error) {
 // IsValidPubKey checks whether the public key
 // pass hex and ASN.1/DER decoding operations.
 func IsValidPubKey(pubKey string) (bool, error) {
-
-	pubBS, err := hex.DecodeString(pubKey)
+	_, err := LoadPubKey(pubKey, CurveP256)
 	if err != nil {
-		return false, errors.New("failed to hex decode public key")
+		return false, fmt.Errorf("failed to hex decode public key. %s", err)
 	}
-
-	var asn1Pub ASN1PubKey
-	_, err = asn1.Unmarshal(pubBS, &asn1Pub)
-	if err != nil {
-		return false, errors.New("failed to unmarshal ASN.1/DER public key")
-	}
-
 	return true, nil
 }
 
@@ -230,7 +223,7 @@ func Verify(pubKey *goecdsa.PublicKey, hash []byte, sig []byte) error {
 
 	decSig, err := hex.DecodeString(string(sig))
 	if err != nil {
-		return errors.New("failed to hex decode signature")
+		return fmt.Errorf("failed to hex decode signature. %s", err)
 	}
 
 	var asn1Sig ASN1Sig
