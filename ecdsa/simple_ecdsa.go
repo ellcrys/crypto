@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"math/big"
+	"regexp"
 )
 
 const (
@@ -70,8 +71,16 @@ func NewSimpleECDSA(curveName string) *SimpleECDSA {
 	return se
 }
 
+// Removes white spaces from a string
+func clean(key string) string {
+	re := regexp.MustCompile(`\r?\n|\s`)
+	return re.ReplaceAllString(key, "")
+}
+
 // LoadPrivKey a formatted private key and return a ecdsa.PrivateKey
 func LoadPrivKey(privKey, curveName string) (*goecdsa.PrivateKey, error) {
+
+	privKey = clean(privKey)
 
 	dBytes, err := hex.DecodeString(privKey)
 	if err != nil {
@@ -106,6 +115,8 @@ func LoadPrivKey(privKey, curveName string) (*goecdsa.PrivateKey, error) {
 // LoadPubKey creates a public key object and returns
 // an ASN.1/DER encoded string.
 func LoadPubKey(pubKey string, curveName string) (*goecdsa.PublicKey, error) {
+
+	pubKey = clean(pubKey)
 
 	pubBS, err := hex.DecodeString(pubKey)
 	if err != nil {
